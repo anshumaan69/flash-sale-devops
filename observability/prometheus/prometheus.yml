@@ -1,0 +1,26 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'ha-webstack'
+    region: 'ap-south-1'
+
+rule_files:
+  - 'alert-rules.yml'
+
+scrape_configs:
+  - job_name: 'backend-app'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['app:3000']
+        labels:
+          tier: 'app'
+          env: 'dev'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'k6'
+    static_configs:
+      - targets: ['k6:6565']
