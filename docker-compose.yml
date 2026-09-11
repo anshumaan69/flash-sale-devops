@@ -64,6 +64,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning
       - grafana_data:/var/lib/grafana
     restart: unless-stopped
 
