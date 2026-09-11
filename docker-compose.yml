@@ -10,7 +10,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: flashsale
     ports:
-      - "3306:3306"
+      - "3308:3306"
     volumes:
       - ./backend/schema.sql:/docker-entrypoint-initdb.d/schema.sql
       - mysql_data:/var/lib/mysql
@@ -33,7 +33,7 @@ services:
       DB_PASSWORD: password
       DB_NAME: flashsale
     ports:
-      - "3000:3000"
+      - "3005:3000"
     depends_on:
       mysql:
         condition: service_healthy
@@ -43,7 +43,7 @@ services:
     image: prom/prometheus:v2.48.0
     container_name: ha_prometheus
     ports:
-      - "9090:9090"
+      - "9095:9090"
     volumes:
       - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./observability/prometheus/alert-rules.yml:/etc/prometheus/alert-rules.yml
@@ -71,7 +71,7 @@ services:
     image: grafana/loki:2.9.0
     container_name: ha_loki
     ports:
-      - "3100:3100"
+      - "3105:3100"
     volumes:
       - ./observability/loki/loki-config.yml:/etc/loki/local-config.yaml
       - loki_data:/loki
@@ -82,7 +82,7 @@ services:
     image: prom/alertmanager:v0.26.0
     container_name: ha_alertmanager
     ports:
-      - "9093:9093"
+      - "9094:9093"
     volumes:
       - ./observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
     restart: unless-stopped

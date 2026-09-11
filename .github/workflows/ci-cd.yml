@@ -1,0 +1,73 @@
+name: HA-WebStack CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, dev, uat, prod ]
+  pull_request:
+    branches: [ main, dev, uat, prod ]
+
+jobs:
+  lint-and-validate:
+    name: Lint & Validate Application
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-size: 18
+          cache: 'npm'
+          cache-dependency-path: 'backend/package.json'
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          npm install
+
+      - name: Validate Backend Code Syntax
+        run: |
+          node -c backend/server.js
+
+      - name: Validate Docker Compose Configuration
+        run: |
+          docker compose config
+
+  docker-build:
+    name: Build & Test Container
+    needs: lint-and-validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Image
+        run: |
+          docker build -t ha-webstack-backend:${{ github.sha }} ./backend
+
+      - name: Verify Image Created
+        run: |
+          docker image ls | grep ha-webstack-backend
+
+  deploy-environment:
+    name: Deploy to Environment
+    needs: docker-build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Branch Staging Log
+        run: |
+          echo "🚀 Deploying commit ${{ github.sha }} to target environment branch: ${{ github.ref_name }}"
+          if [ "${{ github.ref_name }}" = "prod" ]; then
+            echo "🟢 Target Environment: PRODUCTION (Multi-AZ Multi-Region HA)"
+          elif [ "${{ github.ref_name }}" = "uat" ]; then
+            echo "🟡 Target Environment: UAT (User Acceptance Testing)"
+          elif [ "${{ github.ref_name }}" = "dev" ]; then
+            echo "🔵 Target Environment: DEV (AWS Free Tier Sandbox)"
+          else
+            echo "⚪ Target Environment: MAIN Integration Branch"
+          fi
